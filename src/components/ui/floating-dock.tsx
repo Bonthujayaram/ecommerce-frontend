@@ -61,7 +61,12 @@ export const FloatingDock = ({
     };
   });
 
-  return <CircularFloatingDock />;
+  return (
+    <>
+      <FloatingDockDesktop items={itemsWithBadge} className={desktopClassName} />
+      <CircularFloatingDock />
+    </>
+  );
 };
 
 const FloatingDockMobile = ({
