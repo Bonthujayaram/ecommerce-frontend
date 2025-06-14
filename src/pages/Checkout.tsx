@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/useCart';
 import { motion } from 'framer-motion';
-import { Timer, Check, AlertCircle, Home, Plus, X, CreditCard, QrCode } from 'lucide-react';
+import { Timer, Check, AlertCircle, Home, Plus, X, CreditCard, QrCode, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/hooks/useAuth';
+import { BASE_URL } from '@/config';
 
 const PAYMENT_TIMEOUT = 120; // 2 minutes in seconds
-
 
 export const Checkout = () => {
   const { cart, clearCart, cartTotal } = useCart();
@@ -34,41 +34,44 @@ export const Checkout = () => {
     address: ''
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'QR'>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Fetch addresses when component mounts
+  const fetchAddresses = async () => {
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setLoadingError(null);
+      const response = await fetch(`${BASE_URL}/users/${user.id}/addresses`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch addresses');
+      }
+      const data = await response.json();
+      setAddresses(data);
+      if (data.length > 0) {
+        setSelectedAddress(data[0].id.toString());
+      }
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      setLoadingError('Failed to load saved addresses. Please check your connection and try again.');
+      toast({
+        title: "Error",
+        description: "Failed to load saved addresses. Please check your connection.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAddresses = async () => {
-      if (!user?.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`http://localhost:8000/users/${user.id}/addresses`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch addresses');
-        }
-        const data = await response.json();
-        setAddresses(data);
-        if (data.length > 0) {
-          setSelectedAddress(data[0].id.toString());
-        }
-      } catch (error) {
-        console.error('Error fetching addresses:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load saved addresses. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchAddresses();
-  }, [user, toast]);
+  }, [user]);
 
   // Timer effect for payment
   useEffect(() => {
@@ -110,7 +113,7 @@ export const Checkout = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/users/${user.id}/addresses`, {
+      const response = await fetch(`${BASE_URL}/users/${user.id}/addresses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(addressForm)
@@ -172,7 +175,7 @@ export const Checkout = () => {
         };
 
         // Send order data to backend
-        const response = await fetch('http://localhost:8000/orders', {
+        const response = await fetch(`${BASE_URL}/orders`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -198,17 +201,34 @@ export const Checkout = () => {
         }, 2000);
       } catch (error) {
         console.error('Error processing payment:', error);
+        setPaymentStatus('failed');
         toast({
-          title: "Order Failed",
-          description: "There was an error processing your order. Please try again.",
+          title: "Payment Failed",
+          description: "There was an error processing your payment. Please try again.",
           variant: "destructive",
         });
-        setPaymentStatus('failed');
       } finally {
         setIsProcessing(false);
       }
-    }, 5000); // 5 second delay
+    }, 5000);
   };
+
+  if (loadingError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-500" />
+        <h2 className="text-xl font-semibold text-red-500">Connection Error</h2>
+        <p className="text-center text-gray-600">{loadingError}</p>
+        <Button 
+          onClick={fetchAddresses}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-12 px-4 sm:px-6 lg:px-8">
