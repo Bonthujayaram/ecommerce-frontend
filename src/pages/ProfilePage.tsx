@@ -20,6 +20,13 @@ import {
 
 type TabType = 'profileInfo' | 'addresses' | 'wishlist' | 'orders';
 
+interface ProfileForm {
+  first_name: string;
+  last_name: string;
+  gender: string;
+  phone: string;
+}
+
 const SIDEBAR_ITEMS = [
   { key: 'profileInfo' as TabType, label: 'Profile Information', icon: <FaUser /> },
   { key: 'addresses' as TabType, label: 'Manage Addresses', icon: <FaRegAddressBook /> },
@@ -53,11 +60,10 @@ const ProfilePage = () => {
     return (location.state?.activeTab as TabType) || 'profileInfo';
   });
   const [showMenu, setShowMenu] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     first_name: '',
     last_name: '',
     gender: '',
-    mail: '',
     phone: ''
   });
   const [editing, setEditing] = useState(false);
@@ -88,7 +94,6 @@ const ProfilePage = () => {
               first_name: data.first_name || '',
               last_name: data.last_name || '',
               gender: data.gender || '',
-              mail: data.mail || '',
               phone: data.phone || ''
             });
           }
@@ -114,13 +119,26 @@ const ProfilePage = () => {
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSave = () => {
+    const formData = {
+      first_name: form.first_name,
+      last_name: form.last_name,
+      gender: form.gender,
+      phone: form.phone
+    };
+
     fetch(`${BASE_URL}/users/${user.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(formData)
     })
       .then(res => res.json())
-      .then(() => setEditing(false));
+      .then(() => setEditing(false))
+      .catch(error => {
+        console.error('Error updating profile:', error);
+      });
   };
 
   const handleDeleteAddress = (id) => {
@@ -201,53 +219,17 @@ const ProfilePage = () => {
                   className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
                 />
               </div>
-              <div className="md:col-span-2">
-                <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Gender</label>
-                <div className="mt-2 flex gap-6 flex-wrap">
-                  <label className="flex items-center gap-2 whitespace-normal break-words text-blue-700">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="Male"
-                      checked={form.gender === "Male"}
-                      onChange={handleChange}
-                      disabled={!editing}
-                    /> Male
-                  </label>
-                  <label className="flex items-center gap-2 whitespace-normal break-words text-blue-700">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="Female"
-                      checked={form.gender === "Female"}
-                      onChange={handleChange}
-                      disabled={!editing}
-                    /> Female
-                  </label>
-                  <label className="flex items-center gap-2 whitespace-normal break-words text-blue-700">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="Other"
-                      checked={form.gender === "Other"}
-                      onChange={handleChange}
-                      disabled={!editing}
-                    /> Other
-                  </label>
-                </div>
-              </div>
-              <div className="md:col-span-2">
+              <div>
                 <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Email Address</label>
                 <input
-                  name="mail"
-                  value={form.mail}
-                  onChange={handleChange}
-                  disabled={!editing}
-                  className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                  value={user?.email || ''}
+                  readOnly
+                  className="mt-1 w-full border border-blue-100 rounded-lg px-3 py-2 text-base text-gray-900 bg-gray-50"
+                  placeholder="No email available"
                 />
               </div>
-              <div className="md:col-span-2">
-                <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Mobile Number</label>
+              <div>
+                <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Phone Number</label>
                 <input
                   name="phone"
                   value={form.phone}
@@ -256,17 +238,57 @@ const ProfilePage = () => {
                   className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
                 />
               </div>
-              <div className="md:col-span-2 flex justify-end">
-                {editing && (
-                  <button
-                    type="button"
+              <div className="col-span-2">
+                <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Gender</label>
+                <div className="mt-2 flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="Male"
+                      checked={form.gender === 'Male'}
+                      onChange={handleChange}
+                      disabled={!editing}
+                      className="text-blue-600 focus:ring-blue-400"
+                    />
+                    <span className="text-gray-700">Male</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="Female"
+                      checked={form.gender === 'Female'}
+                      onChange={handleChange}
+                      disabled={!editing}
+                      className="text-blue-600 focus:ring-blue-400"
+                    />
+                    <span className="text-gray-700">Female</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="Other"
+                      checked={form.gender === 'Other'}
+                      onChange={handleChange}
+                      disabled={!editing}
+                      className="text-blue-600 focus:ring-blue-400"
+                    />
+                    <span className="text-gray-700">Other</span>
+                  </label>
+                </div>
+              </div>
+              {editing && (
+                <div className="col-span-2 flex justify-end">
+                  <Button
                     onClick={handleSave}
-                    className="bg-gradient-to-r from-blue-600 to-blue-400 text-white px-8 py-2 rounded-lg font-bold shadow-lg hover:scale-105 transition"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6"
                   >
                     Save Changes
-                  </button>
-                )}
-              </div>
+                  </Button>
+                </div>
+              )}
             </form>
           </div>
         );
@@ -482,53 +504,17 @@ const ProfilePage = () => {
                       className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Gender</label>
-                    <div className="mt-2 flex gap-6 flex-wrap">
-                      <label className="flex items-center gap-2 whitespace-normal break-words text-blue-700">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="Male"
-                          checked={form.gender === "Male"}
-                          onChange={handleChange}
-                          disabled={!editing}
-                        /> Male
-                      </label>
-                      <label className="flex items-center gap-2 whitespace-normal break-words text-blue-700">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="Female"
-                          checked={form.gender === "Female"}
-                          onChange={handleChange}
-                          disabled={!editing}
-                        /> Female
-                      </label>
-                      <label className="flex items-center gap-2 whitespace-normal break-words text-blue-700">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="Other"
-                          checked={form.gender === "Other"}
-                          onChange={handleChange}
-                          disabled={!editing}
-                        /> Other
-                      </label>
-                    </div>
-                  </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Email Address</label>
                     <input
-                      name="mail"
-                      value={form.mail}
-                      onChange={handleChange}
-                      disabled={!editing}
-                      className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+                      value={user?.email || ''}
+                      readOnly
+                      className="mt-1 w-full border border-blue-100 rounded-lg px-3 py-2 text-base text-gray-900 bg-gray-50"
+                      placeholder="No email available"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Mobile Number</label>
+                  <div>
+                    <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Phone Number</label>
                     <input
                       name="phone"
                       value={form.phone}
@@ -536,6 +522,47 @@ const ProfilePage = () => {
                       disabled={!editing}
                       className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
                     />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-blue-800 text-sm whitespace-normal break-words font-semibold">Gender</label>
+                    <div className="mt-2 flex gap-4">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="Male"
+                          checked={form.gender === 'Male'}
+                          onChange={handleChange}
+                          disabled={!editing}
+                          className="text-blue-600 focus:ring-blue-400"
+                        />
+                        <span className="text-gray-700">Male</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="Female"
+                          checked={form.gender === 'Female'}
+                          onChange={handleChange}
+                          disabled={!editing}
+                          className="text-blue-600 focus:ring-blue-400"
+                        />
+                        <span className="text-gray-700">Female</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="Other"
+                          checked={form.gender === 'Other'}
+                          onChange={handleChange}
+                          disabled={!editing}
+                          className="text-blue-600 focus:ring-blue-400"
+                        />
+                        <span className="text-gray-700">Other</span>
+                      </label>
+                    </div>
                   </div>
                   <div className="md:col-span-2 flex justify-end">
                     {editing && (
