@@ -153,7 +153,7 @@ export const OrderDetailsPage = () => {
   const total = subtotal + shippingCost;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f8fafc] py-8 px-4 sm:px-6 lg:px-8 pb-24 md:pb-8">
       <div className="max-w-4xl mx-auto">
         <Button
           variant="ghost"
