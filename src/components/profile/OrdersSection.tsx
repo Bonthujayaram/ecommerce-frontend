@@ -134,7 +134,7 @@ export const OrdersSection = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24 md:pb-6">
       <h2 className="text-2xl font-bold text-gray-800">My Orders</h2>
       <div className="grid gap-6">
         {orders.map((order) => (
