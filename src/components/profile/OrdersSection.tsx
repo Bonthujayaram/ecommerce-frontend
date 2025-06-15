@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, RefreshCw } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { BASE_URL } from '@/config';
@@ -34,15 +34,24 @@ export const OrdersSection = () => {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [retryCount, setRetryCount] = React.useState(0);
+
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   React.useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchOrders = async (retries = 3) => {
       if (!user?.id) return;
 
       try {
         // First get the user profile to get the correct user ID
         const profileRes = await fetch(`${BASE_URL}/users/${user.id}`);
         if (!profileRes.ok) {
+          if (retries > 0 && profileRes.status >= 500) {
+            // If server error and retries left, wait and retry
+            setRetryCount(prev => prev + 1);
+            await delay(2000); // Wait 2 seconds before retrying
+            return fetchOrders(retries - 1);
+          }
           throw new Error('Failed to fetch user profile');
         }
         const profileData = await profileRes.json();
@@ -56,6 +65,12 @@ export const OrdersSection = () => {
         });
         
         if (!ordersRes.ok) {
+          if (retries > 0 && ordersRes.status >= 500) {
+            // If server error and retries left, wait and retry
+            setRetryCount(prev => prev + 1);
+            await delay(2000); // Wait 2 seconds before retrying
+            return fetchOrders(retries - 1);
+          }
           const errorData = await ordersRes.json();
           throw new Error(errorData.error || 'Failed to fetch orders');
         }
@@ -67,6 +82,7 @@ export const OrdersSection = () => {
           setOrders(ordersData.sort((a, b) => 
             new Date(b.order_date).getTime() - new Date(a.order_date).getTime()
           ));
+          setRetryCount(0); // Reset retry count on success
         } else {
           throw new Error('Invalid orders data format');
         }
@@ -106,13 +122,25 @@ export const OrdersSection = () => {
       <div className="text-center py-12">
         <h3 className="text-xl font-semibold text-red-600">Error Loading Orders</h3>
         <p className="text-gray-500 mt-2">{error}</p>
-        <Button 
-          variant="outline" 
-          className="mt-4"
-          onClick={() => window.location.reload()}
-        >
-          Try Again
-        </Button>
+        <div className="flex justify-center gap-4 mt-4">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              window.location.reload();
+            }}
+          >
+            <RefreshCw className="w-4 h-4" />
+            Try Again
+          </Button>
+          {retryCount > 0 && (
+            <p className="text-sm text-gray-500 mt-2">
+              Retried {retryCount} times. The server might be waking up...
+            </p>
+          )}
+        </div>
       </div>
     );
   }
