@@ -169,7 +169,7 @@ const ProfilePage = () => {
     switch (activeTab) {
       case 'profileInfo':
         return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 animate-fadein">
+          <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein mb-20 md:mb-6">
             <div className="flex justify-between items-center mb-6 w-full">
               <h2 className="text-xl md:text-2xl font-bold text-gray-800">Profile Information</h2>
               <button
@@ -255,7 +255,7 @@ const ProfilePage = () => {
                   className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
                 />
               </div>
-              <div className="md:col-span-2 flex justify-end">
+              <div className="md:col-span-2 flex justify-end pb-4 md:pb-0">
                 {editing && (
                   <button
                     type="button"
@@ -271,7 +271,7 @@ const ProfilePage = () => {
         );
       case 'addresses':
         return (
-          <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein">
+          <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein mb-20 md:mb-6">
             <div className="flex flex-col sm:flex-row justify-between items-center w-full mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-gray-800">My Addresses</h2>
               <button
@@ -281,7 +281,7 @@ const ProfilePage = () => {
                 Add New Address
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 pb-4 md:pb-0">
               {addresses.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   No addresses added yet
@@ -299,7 +299,7 @@ const ProfilePage = () => {
                         </div>
                         <div className="text-gray-600 text-sm mb-1">{addr.phone}</div>
                         <div className="text-gray-600 text-sm break-words">{addr.address}</div>
-                    </div>
+                      </div>
                       <button
                         className="text-gray-400 hover:text-gray-600 p-1"
                         onClick={() => setMenuOpenId(addr.id === menuOpenId ? null : addr.id)}
@@ -449,7 +449,7 @@ const ProfilePage = () => {
           <div className="max-w-5xl mx-auto">
             {/* Profile Info Section */}
             {activeTab === 'profileInfo' && (
-              <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein">
+              <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein mb-20 md:mb-6">
                 <div className="flex justify-between items-center mb-6 w-full">
                   <h2 className="text-xl md:text-2xl font-bold text-gray-800">Profile Information</h2>
                   <button
@@ -535,7 +535,7 @@ const ProfilePage = () => {
                       className="mt-1 w-full border border-blue-200 rounded-lg px-3 py-2 text-base text-gray-900 focus:ring-2 focus:ring-blue-400 transition-all duration-200"
                     />
                   </div>
-                  <div className="md:col-span-2 flex justify-end">
+                  <div className="md:col-span-2 flex justify-end pb-4 md:pb-0">
                     {editing && (
                       <button
                         type="button"
@@ -552,7 +552,7 @@ const ProfilePage = () => {
 
             {/* Addresses Section */}
             {activeTab === 'addresses' && (
-              <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein">
+              <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 animate-fadein mb-20 md:mb-6">
                 <div className="flex flex-col sm:flex-row justify-between items-center w-full mb-6">
                   <h2 className="text-xl md:text-2xl font-bold text-gray-800">My Addresses</h2>
                   <button
@@ -562,7 +562,7 @@ const ProfilePage = () => {
                     Add New Address
                   </button>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-4 pb-4 md:pb-0">
                   {addresses.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       No addresses added yet
@@ -737,8 +737,8 @@ const ProfilePage = () => {
 
             {/* Edit Address Modal */}
             {editingAddress && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white rounded-3xl shadow-xl p-5 w-full max-w-[400px] mx-4 animate-fadein">
+              <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/50 pt-4 pb-20 md:py-4 px-4 overflow-y-auto scrollbar-hide">
+                <div className="bg-white rounded-3xl shadow-xl p-5 w-full max-w-[400px] mx-auto my-auto relative">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-gray-900">Edit Address</h3>
                     <button 
@@ -765,7 +765,7 @@ const ProfilePage = () => {
                       <select
                         value={editAddressForm.label}
                         onChange={(e) => setEditAddressForm({ ...editAddressForm, label: e.target.value })}
-                        className="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                        className="w-full border border-gray-200 rounded-2xl px-4 py-2.5 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm appearance-none"
                       >
                         <option value="HOME">Home</option>
                         <option value="WORK">Work</option>
@@ -855,6 +855,13 @@ const ProfilePage = () => {
         @keyframes fadein {
           from { opacity: 0; transform: translateY(24px); }
           to { opacity: 1; transform: none; }
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;  /* Chrome, Safari and Opera */
         }
       `}</style>
     </div>
